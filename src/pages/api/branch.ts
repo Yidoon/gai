@@ -8,6 +8,7 @@ export const LIST_LOCAL_BRANCHS = "git branch";
 export const LIST_REMOTE_BRANCHS = "git branch -r";
 const SPLITE_CHARACTER = "_cgb_";
 let CURRENT_BRANCH = "";
+const MOCK_PROJECT_PATH = "/Users/Yidoon/Desktop/tenclass/mp-dgclass";
 
 /**
  * @param branch
@@ -76,18 +77,59 @@ const getBranchData = async (type: BranchType, path: string) => {
   return resultArr;
 };
 
+const deleteBranch = (options: {
+  branch: string;
+  path: string;
+  type: BranchType;
+}) => {
+  const { branch, type, path } = options;
+  const cmdStr =
+    type === "local"
+      ? `git branch -d ${branch}`
+      : `git push origin --delete ${branch}`;
+
+  return new Promise((resolve, reject) => {
+    exec(cmdStr, { cwd: path }, (err, stdout, stderr) => {
+      if (!err) {
+        resolve(stdout);
+      } else {
+        console.log(err);
+        reject(err);
+      }
+    });
+  });
+};
+
 export default async function branch(req: NextApiRequest, res: any) {
   if (req.method === "GET") {
     const { projectPath, type } = req.query as {
       projectPath: string;
       type: BranchType;
     };
-    const mpDGclassPath = "/Users/Yidoon/Desktop/tenclass/mp-dgclass";
 
-    const data = await getBranchData(type || "remote", mpDGclassPath);
+    const data = await getBranchData(type || "remote", MOCK_PROJECT_PATH);
 
     res.json({
       data: data,
+      msg: "",
+      code: 0,
+    });
+  }
+  if (req.method === "DELETE") {
+    const { branchs } = req.body as { branchs: string[] };
+    for (let i = 0, len = branchs.length; i < len; i++) {
+      try {
+        await deleteBranch({
+          branch: branchs[i].replace("origin/", "").trim(),
+          path: MOCK_PROJECT_PATH,
+          type: "remote",
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    res.json({
+      data: branchs.length,
       msg: "",
       code: 0,
     });
