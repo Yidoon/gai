@@ -5,4 +5,7 @@ module.exports = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {},
   plugins: [require("daisyui")],
+  corePlugins: {
+    preflight: false,
+  },
 };
