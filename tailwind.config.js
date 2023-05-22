@@ -1,5 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-console.log(process.env, "process.env");
 module.exports = {
   darkMode: [],
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],

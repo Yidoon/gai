@@ -1,7 +1,7 @@
 export interface Branch {
   branch: string;
   date: string;
-  dateUnix: string;
+  time: number;
   hash: string;
   subject: string;
 }

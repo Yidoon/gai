@@ -1,7 +1,8 @@
 import { exec } from "child_process";
 import path from "path";
-import { NextApiRequest } from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 import { Branch, BranchType } from "@/types/git";
+import _ from "lodash";
 
 const EXCLUDE_BRANCHS = ["master", "dev", "stage", "uat", "develop"];
 export const LIST_LOCAL_BRANCHS = "git branch";
@@ -16,16 +17,16 @@ const MOCK_PROJECT_PATH = "/Users/Yidoon/Desktop/tenclass/mp-dgclass";
  * @returns
  */
 const getBranchLatesCommit = (branch: string, path?: string) => {
-  const cmdStr = `git log ${branch} --oneline --date=relative --pretty=format:"%h%${SPLITE_CHARACTER}%ad${SPLITE_CHARACTER}%s${SPLITE_CHARACTER}%ct" | head -n 1`;
+  const command = `git log ${branch} --oneline --date=relative --pretty=format:"%H${SPLITE_CHARACTER}%ad${SPLITE_CHARACTER}%s${SPLITE_CHARACTER}%ct" | head -n 1`;
 
   return new Promise((resolve, reject) => {
-    exec(cmdStr, { cwd: path }, (err, stdout, stderr) => {
+    exec(command, { cwd: path }, (err, stdout, stderr) => {
       const arr = stdout.split("_cgb_");
       try {
         const obj = {
           hash: arr?.[0]?.trim(),
           date: arr?.[1]?.split("\n")[0],
-          date_unix: Number(arr?.[3]?.split("\n")[0]),
+          time: Number(arr?.[3]?.split("\n")[0]),
           branch: branch,
           subject: arr?.[2]?.trim(),
         };
@@ -59,7 +60,6 @@ const getOriginBranchs = (
 };
 const getBranchData = async (type: BranchType, path: string) => {
   let originBranchs = await getOriginBranchs(type, path);
-  console.log(originBranchs.length, "originBranchs");
   originBranchs.filter((name) => {
     if (name.indexOf("*") > -1) {
       CURRENT_BRANCH = name.replace("*", "").trim();
@@ -74,7 +74,7 @@ const getBranchData = async (type: BranchType, path: string) => {
       resultArr.push(tempRes);
     }
   }
-  return resultArr;
+  return _.sortBy(resultArr, ["time"]);
 };
 
 const deleteBranch = (options: {
@@ -100,7 +100,10 @@ const deleteBranch = (options: {
   });
 };
 
-export default async function branch(req: NextApiRequest, res: any) {
+export default async function branch(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method === "GET") {
     const { projectPath, type } = req.query as {
       projectPath: string;
