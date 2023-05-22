@@ -12,6 +12,8 @@
     "gai": "./bin/index.js"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.1.0",
+    "@types/lodash": "^4.14.194",
     "@types/node": "18.15.10",
     "@types/react": "18.0.30",
     "@types/react-dom": "18.0.11",
@@ -21,10 +23,12 @@
     "class-variance-authority": "^0.6.0",
     "clsx": "^1.2.1",
     "daisyui": "^2.51.6",
+    "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
     "eslint": "8.36.0",
     "eslint-config-next": "13.2.4",
     "eventsource-parser": "^1.0.0",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.219.0",
     "minimist": "^1.2.8",
     "next": "13.2.4",
