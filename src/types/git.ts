@@ -5,4 +5,8 @@ export interface Branch {
   hash: string;
   subject: string;
 }
-export type BranchType = "local" | "remote" | "all";
+export interface BranchSourceListItem {
+  isRemote: boolean;
+  name: string;
+}
+export type BranchSource = "local" | "remote" | "all";
