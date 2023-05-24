@@ -12,7 +12,7 @@ const SPLITE_CHARACTER = "_cgb_";
 let CURRENT_BRANCH = "";
 const MOCK_PROJECT_PATH = "/Users/Yidoon/Desktop/tenclass/mp-dgclass";
 
-const getCommantOfBranch = (branchSource: BranchSource) => {
+const getCommandOfBranch = (branchSource: BranchSource) => {
   if (branchSource === "local") {
     return LIST_LOCAL_BRANCHS;
   }
@@ -50,12 +50,12 @@ const getBranchLatestCommit = (branch: string, path?: string) => {
   });
 };
 
-const getOriginBranchs = (options: {
+const getBranchs = (options: {
   branchSource: BranchSource;
   path: string;
 }): Promise<string[]> => {
   const { branchSource, path } = options;
-  const command = getCommantOfBranch(branchSource);
+  const command = getCommandOfBranch(branchSource);
 
   return new Promise((resolve, reject) => {
     exec(command, { cwd: path }, (err, stdout, stderr) => {
@@ -76,7 +76,7 @@ const getBranchData = async (options: {
   path: string;
 }) => {
   const { branchSource, path } = options;
-  let originBranchs = await getOriginBranchs({ branchSource, path });
+  let originBranchs = await getBranchs({ branchSource, path });
   originBranchs.filter((name) => {
     if (name.indexOf("*") > -1) {
       CURRENT_BRANCH = name.replace("*", "").trim();
@@ -120,21 +120,28 @@ const deleteBranch = (options: {
 interface BranchParams {
   projectPath: string;
   branchSource: BranchSource;
+  author: string;
   [key: string]: string;
 }
 export default async function branch(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { projectPath, branchSource } = req.query as BranchParams;
+  const { projectPath, branchSource, author } = req.query as BranchParams;
   if (req.method === "GET") {
-    const data = await getBranchData({
+    let result = await getBranchData({
       branchSource,
       path: MOCK_PROJECT_PATH,
     });
-
+    if (author) {
+      const authorArr = author.split(",");
+      console.log(authorArr, "authorArr");
+      result = result.filter((item: any) => {
+        return authorArr.includes(item.author);
+      });
+    }
     res.json({
-      data: data,
+      data: result,
       msg: "",
       code: 0,
     });
