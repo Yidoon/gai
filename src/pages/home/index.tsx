@@ -1,12 +1,11 @@
 import AuthorSelect from "@/components/AuthorSelect";
 import BranchSourceSelect from "@/components/BranchSourceSelect";
-import { Branch, BranchSourceListItem } from "@/types/git";
+import { Branch } from "@/types/git";
 import { copyToClipboard } from "@/utils";
 import { CopyOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Form, Popconfirm, Space, Table, Tag, message } from "antd";
 import axios from "axios";
 import dayjs from "dayjs";
-import { config } from "dotenv";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
 
@@ -14,27 +13,8 @@ export default function Index() {
   const [branchs, setBranchs] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [branchSource, setBranchSource] = useState<BranchSourceListItem[]>([]);
 
   const [form] = Form.useForm();
-
-  const reqBranchSource = async () => {
-    const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_HOST}/api/remote`
-    );
-    const sources = Object.keys(res.data.data).map((key) => {
-      return {
-        isRemote: true,
-        name: key,
-      };
-    });
-    setBranchSource(
-      sources.concat([
-        { isRemote: false, name: "all" },
-        { isRemote: false, name: "local" },
-      ])
-    );
-  };
   const reqBranchs = async (params?: any) => {
     setLoading(true);
     const res = await axios.get(
@@ -51,11 +31,11 @@ export default function Index() {
   const handleBranchDelete = async (branchs: React.Key[]) => {
     await axios.delete(`${process.env.NEXT_PUBLIC_API_HOST}/api/branch`, {
       data: {
-        branchs: selectedRowKeys,
+        branchs: branchs,
       },
     });
     message.success("Success");
-    reqBranchs({ branchSource: "local" });
+    reqBranchs({ branchSource: form.getFieldValue("branchSource") });
   };
   const handleSelectSuggestionBranch = async () => {
     const suggestBranchs = _.filter(branchs, (branch) => {
@@ -71,15 +51,8 @@ export default function Index() {
       dataIndex: "branch",
       key: "branch",
       render: (val: string) => {
-        const originName = val.split("/")[0];
-        const _branchNames = branchSource.map((item) => item.name);
-        const prefixText =
-          _branchNames.indexOf(originName) > -1 ? originName : "local";
-        const color =
-          _branchNames.indexOf(originName) > -1 ? "volcano" : "geekblue";
         return (
           <div>
-            <Tag color={color}>{prefixText}</Tag>
             <span>{val}</span>
           </div>
         );
@@ -89,6 +62,19 @@ export default function Index() {
       title: "Latest commit date(Human readable)",
       dataIndex: "date",
       key: "date",
+    },
+    {
+      title: "Latest commit time",
+      dataIndex: "time",
+      key: "time",
+      render: (value: number) => {
+        return dayjs.unix(value).format("YYYY-MM-DD HH:mm:ss");
+      },
+    },
+    {
+      title: "Latest commit author",
+      dataIndex: "author",
+      key: "author",
     },
     {
       title: "Latest commit subject",
@@ -116,19 +102,6 @@ export default function Index() {
       },
     },
     {
-      title: "Latest commit time",
-      dataIndex: "time",
-      key: "time",
-      render: (value: number) => {
-        return dayjs.unix(value).format("YYYY-MM-DD HH:mm:ss");
-      },
-    },
-    {
-      title: "Latest commit author",
-      dataIndex: "author",
-      key: "author",
-    },
-    {
       title: "Action",
       dataIndex: "branch",
       key: "action",
@@ -151,6 +124,7 @@ export default function Index() {
   ];
   const rowSelection = {
     onChange: (selectedRowKeys: React.Key[], selectedRows: Branch[]) => {
+      console.log(selectedRowKeys, "selectedRowKeys");
       setSelectedRowKeys(selectedRowKeys);
     },
     selectedRowKeys: selectedRowKeys,
@@ -164,7 +138,7 @@ export default function Index() {
         <div>
           {selectedRowKeys.length > 0 ? (
             <div>
-              已选{" "}
+              已选
               <span style={{ color: "#166cff" }}>{selectedRowKeys.length}</span>
               个分支
             </div>
@@ -172,34 +146,51 @@ export default function Index() {
             "No branch selected"
           )}
         </div>
+        {selectedRowKeys.length > 0 && (
+          <Button
+            type="link"
+            style={{ marginLeft: 0 }}
+            onClick={() => {
+              setSelectedRowKeys([]);
+            }}
+          >
+            取消选中
+          </Button>
+        )}
       </Space>
     );
   };
-  const handleSearch = () => {
-    const values = form.getFieldsValue();
-    reqBranchs(values);
+  const handleSearch = async () => {
+    const values = await form.getFieldsValue();
+    const params = {
+      ...values,
+      author: values.author?.join(","),
+    };
+    console.log(params, "params");
+    reqBranchs(params);
   };
 
   useEffect(() => {
-    reqBranchs();
-    reqBranchSource();
+    reqBranchs({ branchSource: "local" });
   }, []);
 
   return (
     <div className="p-4">
       <div className="flex mb-4 justify-between">
-        <Form form={form} layout="inline">
+        <Form
+          form={form}
+          layout="inline"
+          initialValues={{ branchSource: "local" }}
+        >
           <Form.Item name="author" label="Author">
             <AuthorSelect />
           </Form.Item>
           <Form.Item name="branchSource" label="Source">
-            <BranchSourceSelect
-              dataSource={branchSource}
-              disableRequest={false}
-            />
+            <BranchSourceSelect />
           </Form.Item>
           <Button
             type="primary"
+            // @ts-ignore
             icon={<SearchOutlined />}
             onClick={handleSearch}
           >

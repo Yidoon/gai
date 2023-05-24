@@ -11,15 +11,17 @@ interface Remote {
 }
 const getRemote = (path: string) => {
   return new Promise((resolve, reject) => {
-    exec("git remote -v", (err, stdout, stderr) => {
+    exec("git remote -v", { cwd: path }, (err, stdout, stderr) => {
       if (err) {
         reject(err);
       } else if (stderr) {
         reject(new Error(stderr));
       } else {
         const remote: Remote = {};
+        console.log(stdout, "stdout");
         const remotes = stdout.trim().split("\n");
         remotes.forEach((r) => {
+          console.log(r, "r");
           const [name, url, type] = r.trim().split(/\s+/);
           if (!remote[name]) {
             remote[name] = {};
