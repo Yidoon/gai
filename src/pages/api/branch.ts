@@ -10,7 +10,7 @@ export const LIST_REMOTE_BRANCHS = "git branch -r";
 export const LIST_ALL_BRANCHS = "git branch -a";
 const SPLITE_CHARACTER = "_cgb_";
 let CURRENT_BRANCH = "";
-const MOCK_PROJECT_PATH = process.env.NEXT_PUBLIC_MOCK_PROJECT_PATH;
+const MOCK_PROJECT_PATH = process.env.NEXT_PUBLIC_MOCK_PROJECT_PATH!;
 
 const getCommandOfBranch = (branchSource: BranchSource) => {
   if (branchSource === "local") {
@@ -149,6 +149,7 @@ export default async function branch(
   if (req.method === "DELETE") {
     const { branchs } = req.body as { branchs: string[] };
     for (let i = 0, len = branchs.length; i < len; i++) {
+      const isRemoteBranch = branchs[i].indexOf("remotes") > -1;
       try {
         await deleteBranch({
           branch: branchs[i].replace(`${branchSource}/`, "").trim(),

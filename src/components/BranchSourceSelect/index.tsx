@@ -13,7 +13,7 @@ const BranchSourceSelect = (props: Props) => {
     );
   });
   return (
-    <Select {...props} style={{ width: 240 }}>
+    <Select {...props} style={{ width: 240 }} allowClear>
       {Options}
     </Select>
   );
