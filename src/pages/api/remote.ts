@@ -3,11 +3,7 @@ import { resolve } from "path";
 import { exec } from "child_process";
 
 interface Remote {
-  [key: string]: {
-    type?: string;
-    url?: string;
-    [key: string]: string | undefined;
-  };
+  [key: string]: string;
 }
 const getRemote = (path: string) => {
   return new Promise((resolve, reject) => {
@@ -18,15 +14,12 @@ const getRemote = (path: string) => {
         reject(new Error(stderr));
       } else {
         const remote: Remote = {};
-        console.log(stdout, "stdout");
         const remotes = stdout.trim().split("\n");
         remotes.forEach((r) => {
-          console.log(r, "r");
-          const [name, url, type] = r.trim().split(/\s+/);
+          const [name, url] = r.trim().split(/\s+/);
           if (!remote[name]) {
-            remote[name] = {};
+            remote[name] = url;
           }
-          remote[name][type] = url;
         });
         resolve(remote);
       }
@@ -34,7 +27,7 @@ const getRemote = (path: string) => {
   });
 };
 
-export default async function source(
+export default async function remote(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
