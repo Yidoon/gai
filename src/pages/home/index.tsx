@@ -8,11 +8,13 @@ import axios from "axios";
 import dayjs from "dayjs";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
+import branch from "../api/branch";
 
 export default function Index() {
   const [branchs, setBranchs] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Branch[]>([]);
 
   const [form] = Form.useForm();
   const reqBranchs = async (params?: any) => {
@@ -28,14 +30,21 @@ export default function Index() {
     setLoading(false);
     setBranchs(res.data.data);
   };
-  const handleBranchDelete = async (branchs: React.Key[]) => {
+  const handleBranchDelete = async (
+    branchs: Array<{ branch: string; remoteName: string }>
+  ) => {
     await axios.delete(`${process.env.NEXT_PUBLIC_API_HOST}/api/branch`, {
       data: {
         branchs: branchs,
       },
     });
     message.success("Success");
-    reqBranchs({ branchSource: form.getFieldValue("branchSource") });
+    const values = await form.getFieldsValue();
+    const params = {
+      ...values,
+      author: values.author?.join(","),
+    };
+    reqBranchs(params);
   };
   const handleSelectSuggestionBranch = async () => {
     const suggestBranchs = _.filter(branchs, (branch) => {
@@ -50,10 +59,17 @@ export default function Index() {
       title: "Branch",
       dataIndex: "branch",
       key: "branch",
-      render: (val: string) => {
+      render: (val: string, record: any) => {
+        const remoteName = record.remoteName;
+        const branch = !!remoteName
+          ? val.replace("remotes/", "").replace(`${remoteName}/`, "")
+          : val;
         return (
           <div>
-            <span>{val}</span>
+            {!!remoteName && (
+              <Tag color="magenta">{`remotes/${remoteName}`}</Tag>
+            )}
+            <span>{branch}</span>
           </div>
         );
       },
@@ -105,7 +121,7 @@ export default function Index() {
       title: "Action",
       dataIndex: "branch",
       key: "action",
-      render: (val: string) => {
+      render: (val: string, record: any) => {
         return (
           <Popconfirm
             title="Delete the branch"
@@ -113,7 +129,9 @@ export default function Index() {
             okText="Yes"
             cancelText="No"
             onConfirm={() => {
-              handleBranchDelete([val]);
+              handleBranchDelete([
+                { branch: val, remoteName: record.remoteName },
+              ]);
             }}
           >
             <Button type="link"> 删除 </Button>
@@ -126,6 +144,7 @@ export default function Index() {
     onChange: (selectedRowKeys: React.Key[], selectedRows: Branch[]) => {
       console.log(selectedRowKeys, "selectedRowKeys");
       setSelectedRowKeys(selectedRowKeys);
+      setSelectedRows(selectedRows);
     },
     selectedRowKeys: selectedRowKeys,
   };
@@ -205,7 +224,10 @@ export default function Index() {
               okText="Yes"
               cancelText="No"
               onConfirm={() => {
-                handleBranchDelete(selectedRowKeys);
+                const data = _.map(selectedRows, (row) => {
+                  return { branch: row.branch, remoteName: row.remoteName };
+                });
+                handleBranchDelete(data);
               }}
             >
               <Button disabled={selectedRowKeys.length === 0}>
