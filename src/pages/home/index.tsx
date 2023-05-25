@@ -166,8 +166,8 @@ export default function Index() {
       ...values,
       author: values.author?.join(","),
     };
-    console.log(params, "params");
     reqBranchs(params);
+    setSelectedRowKeys([]);
   };
 
   useEffect(() => {

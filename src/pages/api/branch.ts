@@ -10,7 +10,7 @@ export const LIST_REMOTE_BRANCHS = "git branch -r";
 export const LIST_ALL_BRANCHS = "git branch -a";
 const SPLITE_CHARACTER = "_cgb_";
 let CURRENT_BRANCH = "";
-const MOCK_PROJECT_PATH = "/Users/Yidoon/Desktop/tenclass/mp-dgclass";
+const MOCK_PROJECT_PATH = process.env.NEXT_PUBLIC_MOCK_PROJECT_PATH;
 
 const getCommandOfBranch = (branchSource: BranchSource) => {
   if (branchSource === "local") {
@@ -61,7 +61,7 @@ const getBranchs = (options: {
     exec(command, { cwd: path }, (err, stdout, stderr) => {
       if (!err) {
         const list = stdout.split("\n").map((name: string) => {
-          return name.trim();
+          return name.replace("*", "").trim();
         });
         resolve(list);
       } else {
@@ -131,7 +131,7 @@ export default async function branch(
   if (req.method === "GET") {
     let result = await getBranchData({
       branchSource,
-      path: MOCK_PROJECT_PATH,
+      path: MOCK_PROJECT_PATH!,
     });
     if (author) {
       const authorArr = author.split(",");
