@@ -3,6 +3,7 @@ import path from "path";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Branch, BranchSource } from "@/types/git";
 import _ from "lodash";
+import { getRemote } from "./remote";
 
 const EXCLUDE_BRANCHS = ["master", "dev", "stage", "uat", "develop"];
 export const LIST_LOCAL_BRANCHS = "git branch";
@@ -71,6 +72,17 @@ const getBranchs = (options: {
     });
   });
 };
+const getRemoteName = async (branch: string, projectPath: string) => {
+  const tempPrefixArr = branch.split("/");
+  const data = (await getRemote(projectPath)) as any;
+  const remotes = Object.keys(data);
+  for (let i = 0, len = tempPrefixArr.length; i < len; i++) {
+    if (remotes.includes(tempPrefixArr[i])) {
+      return tempPrefixArr[i];
+    }
+  }
+  return "";
+};
 const getBranchData = async (options: {
   branchSource: BranchSource;
   path: string;
@@ -87,8 +99,9 @@ const getBranchData = async (options: {
   let tempRes;
   for (let i = 0, len = originBranchs.length; i < len; i++) {
     if (originBranchs[i]) {
+      let remoteName = await getRemoteName(originBranchs[i], path);
       tempRes = await getBranchLatestCommit(originBranchs[i], path);
-      resultArr.push(tempRes);
+      resultArr.push({ ...(tempRes || {}), remoteName: remoteName });
     }
   }
   return _.sortBy(resultArr, ["time"]);
@@ -97,14 +110,13 @@ const getBranchData = async (options: {
 const deleteBranch = (options: {
   path: string;
   branch: string;
-  branchSource: BranchSource;
+  remoteName: string;
 }) => {
-  const { branch, branchSource, path } = options;
-  const cmdStr =
-    branchSource === "local"
-      ? `git branch -d ${branch}`
-      : `git push ${branchSource} --delete ${branch}`;
-
+  const { branch, path, remoteName } = options;
+  const cmdStr = !remoteName
+    ? `git branch -d ${branch}`
+    : `git push ${remoteName} --delete ${branch.replace("origin/", "")}`;
+  console.log(cmdStr, "cmdStr");
   return new Promise((resolve, reject) => {
     exec(cmdStr, { cwd: path }, (err, stdout, stderr) => {
       if (!err) {
@@ -147,14 +159,16 @@ export default async function branch(
     });
   }
   if (req.method === "DELETE") {
-    const { branchs } = req.body as { branchs: string[] };
+    const { branchs } = req.body as {
+      branchs: Array<{ branch: string; remoteName: string }>;
+    };
     for (let i = 0, len = branchs.length; i < len; i++) {
-      const isRemoteBranch = branchs[i].indexOf("remotes") > -1;
+      const { remoteName, branch } = branchs[i];
       try {
         await deleteBranch({
-          branch: branchs[i].replace(`${branchSource}/`, "").trim(),
+          branch: branch.trim(),
           path: MOCK_PROJECT_PATH,
-          branchSource: branchSource,
+          remoteName: remoteName,
         });
       } catch (error) {
         console.log(error);
