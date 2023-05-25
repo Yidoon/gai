@@ -26,7 +26,7 @@ const AuthorSelect = (props: Props) => {
     );
   });
   return (
-    <Select {...props} mode="multiple" style={{ width: 360 }}>
+    <Select {...props} mode="multiple" style={{ width: 360 }} allowClear>
       {Options}
     </Select>
   );
