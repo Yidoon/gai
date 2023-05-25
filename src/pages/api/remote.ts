@@ -5,7 +5,7 @@ import { exec } from "child_process";
 interface Remote {
   [key: string]: string;
 }
-const getRemote = (path: string) => {
+export const getRemote = (path: string) => {
   return new Promise((resolve, reject) => {
     exec("git remote -v", { cwd: path }, (err, stdout, stderr) => {
       if (err) {

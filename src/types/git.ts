@@ -4,6 +4,7 @@ export interface Branch {
   time: number;
   hash: string;
   subject: string;
+  remoteName: string
 }
 export interface BranchSourceListItem {
   isRemote: boolean;
