@@ -5,7 +5,6 @@ require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
 const getProject = async (projectName) => {
   const url = `${process.env.GITLAB_HOST}/api/v4/projects?private_token=${process.env.GITLAB_KEY}`;
-  console.log(url);
   const res = await axios.get(url, {
     params: {
       search: projectName || "",

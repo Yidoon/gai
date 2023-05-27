@@ -9,6 +9,7 @@ export default async function handler(req, res) {
   if (req.method === "POST") {
   } else {
     const { prompt } = req.query;
+    console.log(req.method, "method");
     console.log(req.query, "query");
     const configuration = new Configuration({
       apiKey: process.env.OPENAI_API_KEY,
