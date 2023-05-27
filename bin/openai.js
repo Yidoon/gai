@@ -1,23 +1,34 @@
-const { Configuration, OpenAIApi } = require("openai");
 const dotenv = require("dotenv");
-
+const { Configuration, OpenAIApi } = require("openai");
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 dotenv.config();
 
-module.exports = async function (prompt) {
-  if (!process.env.OPENAI_API_KEY) {
-    return "";
+class OpenAI {
+  configuration;
+  openaiInstance;
+  constructor() {
+    const configuration = new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    this.configuration = configuration;
+    this.openaiInstance = new OpenAIApi(configuration);
   }
-  console.log(process.env.OPENAI_API_KEY, "OPENAI_API_KEY");
-  const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-  const aiInstance = new OpenAIApi(configuration);
-  const response = await aiInstance.createCompletion({
-    model: "text-davinci-003",
-    prompt: prompt,
-    temperature: 0,
-    max_tokens: 1000,
-  });
-  console.log(response.data.choices[0].text, "response.data.choices[0].text");
-  return response;
-};
+  async createChatCompletion(options) {
+    const { prompt } = options;
+    const completion = await this.openaiInstance.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+    return completion.data.choices[0].message.content;
+  }
+}
+const openai = new OpenAI();
+
+module.exports = openai;
