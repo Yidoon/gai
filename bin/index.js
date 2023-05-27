@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 const parseArgs = require("minimist")(process.argv.slice(2));
-const aiBranchName = require("./ai_branch_name");
 const { getProject, createMr } = require("./gitlab");
 const http = require("http");
 const {
@@ -8,42 +7,11 @@ const {
   getCurrentBranch,
   getLatestCommitMessage,
 } = require("./git");
+const openai = require("./openai");
 const path = require("path");
 const chalk = require("chalk");
 
 const args = process.argv.slice(2);
-
-// gai -b "优化跳转" --format=feat/xxxx-xxx-xxx-dyd
-// gai -b "优化跳转" -t feat
-if (parseArgs.b) {
-  // aiBranchName({
-  //   desc: parseArgs.b,
-  //   format: parseArgs.format,
-  // }).then((res) => {
-  //   console.log(res, "=====");
-  // });
-  const DefaultFormat = "feat/xxxx-xxx-xxx-dyd";
-  const _format = parseArgs.format || DefaultFormat;
-  const prompt = `Please give me a branch name, the description is: ${parseArgs.b}, the format is: ${_format}, no more than 30 characters`;
-  console.log(prompt, "prompt");
-  http.get(
-    `http://localhost:3000/api/cli/branch_name?prompt=${prompt}`,
-    (res) => {
-      let list = [];
-      res.on("data", (chunk) => {
-        list.push(chunk);
-      });
-      res.on("end", () => {
-        const res = Buffer.concat(list).toString();
-        const { data } = JSON.parse(res);
-        console.log(data, "data------");
-      });
-      res.on("error", (error) => {
-        console.log(error);
-      });
-    }
-  );
-}
 
 const initCreateMr = async () => {
   const targetBranch = args[1];
@@ -66,6 +34,15 @@ const initCreateMr = async () => {
   const webUrl = await createMr(payload);
   console.log(chalk.green(`create mr success: ${webUrl}`));
 };
+const genBranchname = async () => {
+  const DefaultFormat = "feat/xxxx-xxx-xxx-dyd";
+  const _format = parseArgs.format || DefaultFormat;
+  const prompt = `Please give me a branch name, the description is: ${parseArgs.b}, the format is: ${_format}, no more than 30 characters`;
+  const res = await openai.createChatCompletion({ prompt: prompt });
+};
 if (args[0] === "mr") {
   initCreateMr();
+}
+if (parseArgs.b) {
+  genBranchname();
 }
