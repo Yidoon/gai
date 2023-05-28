@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const parseArgs = require("minimist")(process.argv.slice(2));
-const { getProject, createMr } = require("./gitlab");
+const gitlab = require("./gitlab");
 const http = require("http");
 const {
   getLocalProjectName,
@@ -10,6 +10,7 @@ const {
 const openai = require("./openai");
 const path = require("path");
 const chalk = require("chalk");
+const { open } = require("./utils");
 
 const args = process.argv.slice(2);
 
@@ -18,7 +19,7 @@ const initCreateMr = async () => {
   let title = args[2];
   const p = process.cwd();
   const projectName = await getLocalProjectName(p);
-  const gitlabProjects = await getProject(projectName);
+  const gitlabProjects = await gitlab.getProject(projectName);
   const target = gitlabProjects[0];
   const { id } = target;
   const branchName = await getCurrentBranch();
@@ -31,8 +32,17 @@ const initCreateMr = async () => {
     target_branch: targetBranch,
     title: title,
   };
-  const webUrl = await createMr(payload);
-  console.log(chalk.green(`create mr success: ${webUrl}`));
+  try {
+    const webUrl = await gitlab.createMr(payload).catch((errorRes) => {});
+    console.log(chalk.green(`Create mr success: ${webUrl}`));
+    webUrl && open(webUrl);
+  } catch (errorRes) {
+    console.log(
+      chalk.red(
+        `create mr Error: status ${errorRes.response.status}, statsText: ${errorRes.response.statusText}`
+      )
+    );
+  }
 };
 const genBranchname = async () => {
   const DefaultFormat = "feat/xxxx-xxx-xxx-dyd";
