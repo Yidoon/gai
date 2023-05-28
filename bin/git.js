@@ -52,8 +52,17 @@ function getLatestCommitMessage() {
     });
   });
 }
+function getOrigin() {
+  return new Promise((resolve, reject) => {
+    exec("git remote get-url origin", (err, stdout) => {
+      resolve(stdout.trim());
+    });
+  });
+}
+
 module.exports = {
   getLocalProjectName,
   getCurrentBranch,
   getLatestCommitMessage,
+  getOrigin,
 };
