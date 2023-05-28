@@ -6,11 +6,12 @@ const {
   getLocalProjectName,
   getCurrentBranch,
   getLatestCommitMessage,
+  getOrigin,
 } = require("./git");
 const openai = require("./openai");
 const path = require("path");
 const chalk = require("chalk");
-const { open } = require("./utils");
+const { open, getUrlFromOrigin } = require("./utils");
 
 const args = process.argv.slice(2);
 
@@ -50,8 +51,17 @@ const genBranchname = async () => {
   const prompt = `Please give me a branch name, the description is: ${parseArgs.b}, the format is: ${_format}, no more than 30 characters`;
   const res = await openai.createChatCompletion({ prompt: prompt });
 };
+const openOrigin = async () => {
+  const origin = await getOrigin();
+  const url = await getUrlFromOrigin(origin);
+  console.log(url);
+  url && open(url);
+};
 if (args[0] === "mr") {
   initCreateMr();
+}
+if (args[0] === "open") {
+  openOrigin();
 }
 if (parseArgs.b) {
   genBranchname();
