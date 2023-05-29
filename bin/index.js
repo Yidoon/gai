@@ -11,7 +11,11 @@ const {
 const openai = require("./openai");
 const path = require("path");
 const chalk = require("chalk");
+<<<<<<< HEAD
 const { open, getGitWebUrl } = require("./utils");
+=======
+const { open, getUrlFromOrigin } = require("./utils");
+>>>>>>> f0ebd11 (chore)
 const dotenv = require("dotenv");
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
