@@ -11,7 +11,7 @@ const {
 const openai = require("./openai");
 const path = require("path");
 const chalk = require("chalk");
-const { open, getUrlFromOrigin } = require("./utils");
+const { open, getGitWebUrl } = require("./utils");
 const dotenv = require("dotenv");
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
@@ -72,9 +72,9 @@ const genBranchname = async () => {
   const res = await openai.createChatCompletion({ prompt: prompt });
   console.log(chalk.green(`Suggest name: ${res}`));
 };
-const openOrigin = async () => {
+const openGitWebUrl = async () => {
   const origin = await getOrigin();
-  const url = await getUrlFromOrigin(origin);
+  const url = await getGitWebUrl(origin);
   console.log(url);
   url && open(url);
 };
@@ -82,7 +82,7 @@ if (args[0] === "mr") {
   initCreateMr();
 }
 if (args[0] === "open") {
-  openOrigin();
+  openGitWebUrl();
 }
 if (parseArgs.b) {
   genBranchname();
