@@ -13,6 +13,7 @@ const path = require("path");
 const chalk = require("chalk");
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 const { open, getGitWebUrl } = require("./utils");
 =======
 const { open, getUrlFromOrigin } = require("./utils");
@@ -20,6 +21,9 @@ const { open, getUrlFromOrigin } = require("./utils");
 =======
 const { open, getGitWebUrl } = require("./utils");
 >>>>>>> 047c850 (optimize open git web url)
+=======
+const { open, getGitWebUrl } = require("./utils");
+>>>>>>> 1aaaf12 (optimize open git web url)
 const dotenv = require("dotenv");
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
