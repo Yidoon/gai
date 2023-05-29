@@ -57,7 +57,6 @@ class Gitlab {
         },
       }
     );
-    console.log(res.data.iid, "iid");
     return res.data.web_url;
   }
 }
